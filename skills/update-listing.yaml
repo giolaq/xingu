@@ -1,0 +1,29 @@
+name: update-listing
+description: Update store listing metadata for a specific locale
+parameters:
+  - name: app_id
+    description: The application ID
+    required: true
+  - name: locale
+    description: Locale code (e.g. en-US)
+    required: true
+  - name: title
+    description: App title
+    required: false
+  - name: description
+    description: Full description
+    required: false
+  - name: short_description
+    description: Short description
+    required: false
+  - name: recent_changes
+    description: What's new text
+    required: false
+steps:
+  - command: >-
+      xingu +update-listing {{ app_id }} --locale {{ locale }}
+      {% if title %}--title "{{ title }}"{% endif %}
+      {% if description %}--description "{{ description }}"{% endif %}
+      {% if short_description %}--short-description "{{ short_description }}"{% endif %}
+      {% if recent_changes %}--recent-changes "{{ recent_changes }}"{% endif %}
+    description: Update the listing fields for the given locale

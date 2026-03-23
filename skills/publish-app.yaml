@@ -1,0 +1,12 @@
+name: publish-app
+description: Create an edit, upload an APK, and commit in one step
+parameters:
+  - name: app_id
+    description: The application ID
+    required: true
+  - name: file
+    description: Path to the APK file
+    required: true
+steps:
+  - command: xingu +publish {{ app_id }} --file {{ file }}
+    description: Create edit, upload APK, and commit

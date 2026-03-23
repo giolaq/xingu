@@ -1,0 +1,9 @@
+name: check-status
+description: Get app info and active edit status
+parameters:
+  - name: app_id
+    description: The application ID
+    required: true
+steps:
+  - command: xingu +status {{ app_id }}
+    description: Retrieve app information and any active edit

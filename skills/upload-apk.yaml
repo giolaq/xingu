@@ -1,0 +1,15 @@
+name: upload-apk
+description: Upload a new APK to an Amazon AppStore app edit
+parameters:
+  - name: app_id
+    description: The application ID
+    required: true
+  - name: edit_id
+    description: The edit ID (create one first with `xingu edits create`)
+    required: true
+  - name: file
+    description: Path to the APK file
+    required: true
+steps:
+  - command: xingu apks upload {{ app_id }} {{ edit_id }} --file {{ file }}
+    description: Upload the APK file to the edit
