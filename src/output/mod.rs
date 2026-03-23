@@ -3,16 +3,11 @@ pub mod table;
 
 use clap::ValueEnum;
 
-#[derive(Debug, Clone, Copy, ValueEnum)]
+#[derive(Debug, Clone, Copy, Default, ValueEnum)]
 pub enum OutputFormat {
+    #[default]
     Json,
     Table,
-}
-
-impl Default for OutputFormat {
-    fn default() -> Self {
-        Self::Json
-    }
 }
 
 pub fn print_output(value: &serde_json::Value, format: OutputFormat) {
