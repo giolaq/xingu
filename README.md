@@ -5,8 +5,9 @@
 <h1 align="center">xingu</h1>
 
 <p align="center">
-  Amazon AppStore CLI — for humans and agents.<br>
-  Named after the <a href="https://en.wikipedia.org/wiki/Xingu_River">Xingu River</a>, a major tributary of the Amazon.
+  <strong>Unofficial</strong> Amazon AppStore CLI — for humans and agents.<br>
+  Named after the <a href="https://en.wikipedia.org/wiki/Xingu_River">Xingu River</a>, a major tributary of the Amazon.<br>
+  <sub>Not affiliated with or endorsed by Amazon.</sub>
 </p>
 
 ## Install
@@ -144,6 +145,10 @@ Credentials are stored in the OS keyring (macOS Keychain, Linux secret-service) 
 ### Base URL override
 
 `XINGU_BASE_URL` is restricted to HTTPS amazon.com domains and localhost. This prevents credential exfiltration via SSRF if an attacker controls environment variables.
+
+## Disclaimer
+
+This is an unofficial, community-built tool. It is not affiliated with, endorsed by, or supported by Amazon. "Amazon", "Amazon Appstore", and related names are trademarks of Amazon.com, Inc.
 
 ## License
 
