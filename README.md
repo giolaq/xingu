@@ -7,7 +7,6 @@
 <p align="center">
   <strong>Unofficial</strong> Amazon AppStore CLI — for humans and agents.<br>
   Named after the <a href="https://en.wikipedia.org/wiki/Xingu_River">Xingu River</a>, a major tributary of the Amazon.<br>
-  <sub>Not affiliated with or endorsed by Amazon.</sub>
 </p>
 
 ## Install
