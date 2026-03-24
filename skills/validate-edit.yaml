@@ -1,0 +1,12 @@
+name: validate-edit
+description: Validate an edit before committing to catch errors early
+parameters:
+  - name: app_id
+    description: The application ID
+    required: true
+  - name: edit_id
+    description: The edit ID to validate
+    required: true
+steps:
+  - command: xingu edits validate {{ app_id }} {{ edit_id }}
+    description: Validate the edit without committing

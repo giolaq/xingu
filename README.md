@@ -126,6 +126,8 @@ YAML skill definitions in `skills/` for common workflows:
 - `publish-app.yaml` — One-step publish
 - `update-listing.yaml` — Update store listing
 - `check-status.yaml` — Check app status
+- `validate-edit.yaml` — Validate an edit before committing
+- `check-targeting.yaml` — View APK device targeting
 
 ## Security
 

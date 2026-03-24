@@ -1,0 +1,15 @@
+name: check-targeting
+description: View device targeting for an APK
+parameters:
+  - name: app_id
+    description: The application ID
+    required: true
+  - name: edit_id
+    description: The edit ID
+    required: true
+  - name: apk_id
+    description: The APK ID
+    required: true
+steps:
+  - command: xingu targeting get {{ app_id }} {{ edit_id }} {{ apk_id }}
+    description: Get device targeting info for the APK
