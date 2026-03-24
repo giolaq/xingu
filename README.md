@@ -30,7 +30,7 @@ cargo build --release
 ## Setup
 
 1. Go to the [Amazon Developer Console](https://developer.amazon.com/)
-2. Navigate to **Tools & Services > API Access**
+2. Navigate to **My Settings > API Access**
 3. Create a new **Security Profile** and note your Client ID and Client Secret
 4. Attach the security profile to the **App Submission API**
 
