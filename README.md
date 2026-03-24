@@ -114,19 +114,106 @@ xingu +update-listing <app-id> --locale en-US --title "My App" --description "..
 | 3 | Validation error |
 | 4 | Network error |
 
+## Prerequisites
+
+The Amazon App Submission API only manages **subsequent versions** of an app. You must submit the first version of your app through the [Developer Console](https://developer.amazon.com/). After the first version is published, you can use xingu (and the API) to manage all future updates.
+
+### App state requirements
+
+Not all app states allow API operations. The API will return `412 Precondition Failed` if the app is in a state that blocks edits:
+
+| App state | Can create edits? |
+|-----------|-------------------|
+| Published | ✅ Yes |
+| Incomplete (never submitted) | ❌ No — submit first version via Console |
+| Submitted / Under Review | ❌ No — wait for review to complete |
+| Suppressed | ❌ No |
+
+### ETags
+
+The Amazon API uses ETags for concurrency control. Most `PUT`, `DELETE`, and some `POST` operations (validate, commit, delete) require an `If-Match` header with the current ETag. xingu handles this automatically — it fetches the ETag from a prior `GET` request before sending mutating requests.
+
 ## Agent integration
 
 Agents should invoke `xingu` as a subprocess with proper argument arrays (not shell string interpolation) to avoid command injection. All commands output structured JSON by default.
 
+### Typical agent workflow
+
+```bash
+# 1. Authenticate (token lasts ~1 hour)
+xingu auth login
+
+# 2. Check app state before doing anything
+xingu +status <app-id>
+# → { "appId": "...", "activeEdit": { "id": "...", "status": "IN_PROGRESS" } }
+# → { "appId": "...", "activeEdit": {} }  ← no active edit
+
+# 3a. One-step publish (create edit → upload → commit)
+xingu +publish <app-id> --file app.apk
+
+# 3b. Or step-by-step for more control:
+EDIT=$(xingu edits create <app-id> | jq -r .id)
+xingu apks upload <app-id> $EDIT --file app.apk
+xingu edits validate <app-id> $EDIT        # catch errors before committing
+xingu edits commit <app-id> $EDIT
+
+# 4. Update metadata without uploading a new APK
+xingu +update-listing <app-id> --locale en-US --title "My App" --description "..."
+
+# 5. Preview any command without executing
+xingu +publish <app-id> --file app.apk --dry-run
+# → POST /applications/<app-id>/edits
+# → POST /applications/<app-id>/edits/<edit_id>/apks/upload (file: app.apk)
+# → POST /applications/<app-id>/edits/<edit_id>/commit
+```
+
+### Error handling
+
+Agents should check exit codes and parse JSON error responses:
+
+```bash
+output=$(xingu edits create <app-id> 2>&1)
+exit_code=$?
+
+case $exit_code in
+  0) edit_id=$(echo "$output" | jq -r .id) ;;
+  1) echo "API error: $output" ;;       # e.g. 412 Precondition Failed
+  2) echo "Auth error: $output" ;;       # token expired — run `xingu auth login`
+  3) echo "Validation error: $output" ;; # invalid input
+  4) echo "Network error: $output" ;;    # timeout or connectivity issue
+esac
+```
+
+API errors return structured JSON:
+```json
+{
+  "httpCode": 412,
+  "message": "Precondition Failed",
+  "errors": [{ "errorCode": "error_new_version_creation_not_allowed", "errorMessage": "..." }]
+}
+```
+
+### Token management
+
+Tokens expire after ~1 hour. Agents should:
+1. Call `xingu auth login` before a workflow (or on 401 errors)
+2. Use `XINGU_CLIENT_ID` and `XINGU_CLIENT_SECRET` env vars for non-interactive auth
+3. Or set `XINGU_TOKEN` directly if managing tokens externally
+
 ### Skills
 
 YAML skill definitions in `skills/` for common workflows:
-- `upload-apk.yaml` — Upload an APK
-- `publish-app.yaml` — One-step publish
-- `update-listing.yaml` — Update store listing
-- `check-status.yaml` — Check app status
-- `validate-edit.yaml` — Validate an edit before committing
-- `check-targeting.yaml` — View APK device targeting
+
+| Skill | File | Description |
+|-------|------|-------------|
+| Publish app | `publish-app.yaml` | One-step: edit → upload → commit |
+| Upload APK | `upload-apk.yaml` | Upload APK to an existing edit |
+| Update listing | `update-listing.yaml` | Update store listing fields per locale |
+| Check status | `check-status.yaml` | Get app info + active edit |
+| Validate edit | `validate-edit.yaml` | Validate an edit before committing |
+| Check targeting | `check-targeting.yaml` | View APK device targeting |
+
+Skills use Jinja-style templates with required/optional parameters. See individual YAML files for details.
 
 ## Security
 
