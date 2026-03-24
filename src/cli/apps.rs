@@ -33,7 +33,9 @@ pub async fn run(
             );
         }
         AppsCommands::Get { app_id } => {
-            exec::api_get(&format!("/applications/{app_id}"), format, dry_run, timeout).await
+            // The API has no GET /applications/{appId} endpoint.
+            // Fetch the active edit as a proxy to confirm the app exists.
+            exec::api_get(&format!("/applications/{app_id}/edits"), format, dry_run, timeout).await
         }
     }
 }

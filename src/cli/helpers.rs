@@ -136,21 +136,17 @@ pub async fn status(
     timeout: u64,
 ) -> Result<()> {
     if dry_run {
-        println!("GET /applications/{}", args.app_id);
         println!("GET /applications/{}/edits", args.app_id);
         return Ok(());
     }
 
     let client = ApiClient::new(timeout).await?;
 
-    let app_path = format!("/applications/{}", args.app_id);
-    let app = client.get(&app_path).await.context("failed to get app")?;
-
     let edit_path = format!("/applications/{}/edits", args.app_id);
-    let edit = client.get(&edit_path).await.ok();
+    let edit = client.get(&edit_path).await.context("failed to get active edit")?;
 
     let output = serde_json::json!({
-        "app": app,
+        "appId": args.app_id,
         "activeEdit": edit,
     });
     print_output(&output, format);
