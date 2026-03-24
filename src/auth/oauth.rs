@@ -5,9 +5,18 @@ use std::time::Duration;
 
 const TOKEN_URL: &str = "https://api.amazon.com/auth/O2/token";
 const SCOPE: &str = "appstore::apps:readwrite";
+const REPORTING_SCOPE: &str = "adx_reporting::appstore:marketer";
 const OAUTH_TIMEOUT_SECS: u64 = 30;
 
 pub async fn fetch_token(client_id: &str, client_secret: &str) -> Result<String> {
+    fetch_token_with_scope(client_id, client_secret, SCOPE).await
+}
+
+pub async fn fetch_reporting_token(client_id: &str, client_secret: &str) -> Result<String> {
+    fetch_token_with_scope(client_id, client_secret, REPORTING_SCOPE).await
+}
+
+async fn fetch_token_with_scope(client_id: &str, client_secret: &str, scope: &str) -> Result<String> {
     let client = reqwest::ClientBuilder::new()
         .timeout(Duration::from_secs(OAUTH_TIMEOUT_SECS))
         .build()
@@ -16,7 +25,7 @@ pub async fn fetch_token(client_id: &str, client_secret: &str) -> Result<String>
         ("grant_type", "client_credentials"),
         ("client_id", client_id),
         ("client_secret", client_secret),
-        ("scope", SCOPE),
+        ("scope", scope),
     ];
 
     let resp = client

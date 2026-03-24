@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 use crate::auth;
 
 const BASE_URL: &str = "https://developer.amazon.com/api/appstore/v1";
+const DOWNLOAD_BASE_URL: &str = "https://developer.amazon.com/api/appstore";
 const MAX_429_RETRIES: u32 = 3;
 const MAX_OUTER_ATTEMPTS: u32 = 2;
 
@@ -60,18 +61,32 @@ pub struct ApiClient {
     http: Client,
     token: Mutex<String>,
     base_url: String,
+    download_base_url: String,
     etags: Mutex<HashMap<String, String>>,
 }
 
 impl ApiClient {
     pub async fn new(timeout_secs: u64) -> Result<Self> {
         let token = auth::get_token().await?;
+        Self::with_token(token, timeout_secs)
+    }
+
+    pub async fn new_reporting(timeout_secs: u64) -> Result<Self> {
+        let token = auth::get_reporting_token().await?;
+        Self::with_token(token, timeout_secs)
+    }
+
+    fn with_token(token: String, timeout_secs: u64) -> Result<Self> {
         let base_url = match std::env::var("XINGU_BASE_URL") {
             Ok(url) => {
                 validate_base_url(&url)?;
-                url
+                url.clone()
             }
             Err(_) => BASE_URL.to_string(),
+        };
+        let download_base_url = match std::env::var("XINGU_BASE_URL") {
+            Ok(url) => url,
+            Err(_) => DOWNLOAD_BASE_URL.to_string(),
         };
         let http = ClientBuilder::new()
             .timeout(Duration::from_secs(timeout_secs))
@@ -81,6 +96,7 @@ impl ApiClient {
             http,
             token: Mutex::new(token),
             base_url,
+            download_base_url,
             etags: Mutex::new(HashMap::new()),
         })
     }
@@ -101,6 +117,10 @@ impl ApiClient {
 
     fn url(&self, path: &str) -> String {
         format!("{}{}", self.base_url, path)
+    }
+
+    fn download_url(&self, path: &str) -> String {
+        format!("{}{}", self.download_base_url, path)
     }
 
     fn store_etag(&self, path: &str, etag: &str) {
@@ -267,6 +287,39 @@ impl ApiClient {
             self.store_etag(path, etag);
         }
         Ok(result.value)
+    }
+
+    /// GET that returns the raw response body as a string (for Reporting API S3 URLs).
+    pub async fn get_raw(&self, path: &str) -> Result<String> {
+        let url = self.download_url(path);
+        Self::log_request("GET", &url);
+
+        let start = Instant::now();
+        let resp = self
+            .http
+            .get(&url)
+            .headers(self.auth_headers())
+            .send()
+            .await
+            .context("HTTP request failed")?;
+
+        let status = resp.status();
+        Self::log_response("GET", &url, status, start.elapsed());
+
+        let body = resp.text().await.context("failed to read response body")?;
+
+        if !status.is_success() {
+            if status == StatusCode::UNAUTHORIZED || status == StatusCode::FORBIDDEN {
+                bail!(
+                    "Authentication failed ({}). The Reporting API may require a separate security profile with scope `adx_reporting::appstore:marketer`.\n{}",
+                    status,
+                    body
+                );
+            }
+            bail!("API error ({}): {}", status, body);
+        }
+
+        Ok(body)
     }
 
     pub async fn post(&self, path: &str, body: &serde_json::Value) -> Result<serde_json::Value> {

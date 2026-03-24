@@ -7,6 +7,7 @@ pub mod exec;
 pub mod helpers;
 pub mod images;
 pub mod listings;
+pub mod reports;
 pub mod targeting;
 pub mod videos;
 
@@ -63,6 +64,11 @@ pub enum Commands {
     Targeting {
         #[command(subcommand)]
         command: targeting::TargetingCommands,
+    },
+    /// Download sales, earnings, and subscription reports
+    Reports {
+        #[command(subcommand)]
+        command: reports::ReportsCommands,
     },
     /// Helper workflows (compound commands)
     #[command(name = "+publish")]

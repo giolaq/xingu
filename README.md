@@ -32,6 +32,7 @@ cargo build --release
 2. Navigate to **My Settings > API Access**
 3. Create a new **Security Profile** and note your Client ID and Client Secret
 4. Attach the security profile to the **App Submission API**
+5. (Optional) To use `reports` commands, also attach the security profile to the **Reporting API**
 
 ```bash
 xingu auth setup
@@ -73,6 +74,16 @@ xingu +status <app-id>
 
 # Update store listing
 xingu +update-listing <app-id> --locale en-US --title "My App" --description "..."
+
+# Download sales report (returns S3 download URL)
+xingu reports sales 2024 04
+
+# Download earnings report (yearly or monthly)
+xingu reports earnings 2024
+xingu reports earnings 2024 03
+
+# Download subscription report
+xingu reports subscription 2024 06
 ```
 
 ## Commands
@@ -91,6 +102,7 @@ xingu +update-listing <app-id> --locale en-US --title "My App" --description "..
 | `videos list/upload/delete/delete-all` | Manage videos per locale |
 | `availability get/update` | Manage availability and scheduling |
 | `targeting get/update` | Manage APK device targeting |
+| `reports sales/earnings/subscription/subscriptions-overview` | Download sales and financial reports |
 | `+publish` | One-step: edit → upload → commit |
 | `+status` | App info + active edit summary |
 | `+update-listing` | Update listing fields directly |
@@ -224,7 +236,7 @@ Credentials are stored in the OS keyring (macOS Keychain, Linux secret-service) 
 ### Token handling
 
 - `xingu auth token` outputs the full bearer token to stdout (for piping). Be careful with shell history and logging.
-- Token cache (`token_cache.json`) has `0600` permissions and expires after ~1 hour.
+- Token caches (`token_cache.json` and `reporting_token_cache.json`) have `0600` permissions and expire after ~1 hour. The App Submission API and Reporting API use different OAuth scopes, so xingu manages separate tokens automatically.
 - `--verbose` mode never logs tokens or credentials.
 
 ### Base URL override

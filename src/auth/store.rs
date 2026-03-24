@@ -53,6 +53,10 @@ fn token_cache_path() -> Result<PathBuf> {
     Ok(config_dir()?.join("token_cache.json"))
 }
 
+fn reporting_token_cache_path() -> Result<PathBuf> {
+    Ok(config_dir()?.join("reporting_token_cache.json"))
+}
+
 fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -164,6 +168,30 @@ pub fn load_cached_token() -> Result<Option<String>> {
     load_cached_token_from(&path)
 }
 
+pub fn cache_reporting_token(token: &str) -> Result<()> {
+    let cached = CachedToken {
+        token: token.to_string(),
+        expires_at: now_secs() + TOKEN_TTL_SECS,
+    };
+    let path = reporting_token_cache_path()?;
+    let json = serde_json::to_string(&cached)?;
+    fs::write(&path, json).context("failed to cache reporting token")?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let perms = fs::Permissions::from_mode(0o600);
+        fs::set_permissions(&path, perms).ok();
+    }
+
+    Ok(())
+}
+
+pub fn load_cached_reporting_token() -> Result<Option<String>> {
+    let path = reporting_token_cache_path()?;
+    load_cached_token_from(&path)
+}
+
 /// Load and validate a cached token from a specific path. Extracted for testability.
 fn load_cached_token_from(path: &std::path::Path) -> Result<Option<String>> {
     if !path.exists() {
@@ -255,5 +283,35 @@ mod tests {
         let now = now_secs();
         // Should be after 2024-01-01
         assert!(now > 1704067200);
+    }
+
+    #[test]
+    fn test_reporting_token_cache_roundtrip() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("reporting_token_cache.json");
+
+        let cached = CachedToken {
+            token: "reporting-token-xyz".to_string(),
+            expires_at: now_secs() + 3600,
+        };
+        fs::write(&path, serde_json::to_string(&cached).unwrap()).unwrap();
+
+        let result = load_cached_token_from(&path).unwrap();
+        assert_eq!(result, Some("reporting-token-xyz".to_string()));
+    }
+
+    #[test]
+    fn test_reporting_token_cache_expired() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("reporting_token_cache.json");
+
+        let cached = CachedToken {
+            token: "expired-reporting".to_string(),
+            expires_at: 0,
+        };
+        fs::write(&path, serde_json::to_string(&cached).unwrap()).unwrap();
+
+        let result = load_cached_token_from(&path).unwrap();
+        assert_eq!(result, None);
     }
 }
