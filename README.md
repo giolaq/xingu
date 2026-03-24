@@ -249,4 +249,4 @@ This is an unofficial, community-built tool. It is not affiliated with, endorsed
 
 ## License
 
-MIT
+[MIT](./LICENSE)
