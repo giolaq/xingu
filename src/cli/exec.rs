@@ -51,8 +51,10 @@ pub async fn api_put_with_etag(
     Ok(())
 }
 
-pub async fn api_delete(
+/// DELETE that first GETs an ETag from `etag_path`, then deletes `path`.
+pub async fn api_delete_with_etag(
     path: &str,
+    etag_path: &str,
     format: OutputFormat,
     dry_run: bool,
     timeout: u64,
@@ -62,7 +64,27 @@ pub async fn api_delete(
         return Ok(());
     }
     let client = ApiClient::new(timeout).await?;
+    let _ = client.get(etag_path).await?;
     let result = client.delete(path).await?;
+    print_output(&result, format);
+    Ok(())
+}
+
+/// POST that first GETs an ETag from `etag_path`, then posts to `path`.
+pub async fn api_post_with_etag(
+    path: &str,
+    etag_path: &str,
+    format: OutputFormat,
+    dry_run: bool,
+    timeout: u64,
+) -> Result<()> {
+    if dry_run {
+        println!("POST {path}");
+        return Ok(());
+    }
+    let client = ApiClient::new(timeout).await?;
+    let _ = client.get(etag_path).await?;
+    let result = client.post(path, &serde_json::json!({})).await?;
     print_output(&result, format);
     Ok(())
 }

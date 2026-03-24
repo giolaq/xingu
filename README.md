@@ -83,14 +83,15 @@ xingu +update-listing <app-id> --locale en-US --title "My App" --description "..
 | `auth setup` | Configure API credentials |
 | `auth login` | Acquire fresh OAuth token |
 | `auth token` | Print current access token |
-| `apps get` | Get app details |
-| `edits create/get/delete/commit` | Manage edits |
-| `apks list/upload/replace/delete` | Manage APK files |
-| `listings get/update` | Manage store listings |
+| `apps get` | Get active edit for an app |
+| `edits create/get/get-previous/validate/delete/commit` | Manage edits |
+| `apks list/get/upload/replace/delete` | Manage APK files |
+| `listings list/get/update/delete` | Manage store listings per locale |
 | `details get/update` | Manage app details |
-| `images list/upload/delete` | Manage screenshots/icons |
-| `videos upload` | Upload videos |
-| `availability get/update` | Manage availability |
+| `images list/upload/delete/delete-all` | Manage screenshots/icons per locale |
+| `videos list/upload/delete/delete-all` | Manage videos per locale |
+| `availability get/update` | Manage availability and scheduling |
+| `targeting get/update` | Manage APK device targeting |
 | `+publish` | One-step: edit → upload → commit |
 | `+status` | App info + active edit summary |
 | `+update-listing` | Update listing fields directly |

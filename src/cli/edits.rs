@@ -16,6 +16,18 @@ pub enum EditsCommands {
         /// Application ID
         app_id: String,
     },
+    /// Get the previous (live) edit for an app
+    GetPrevious {
+        /// Application ID
+        app_id: String,
+    },
+    /// Validate an edit without committing
+    Validate {
+        /// Application ID
+        app_id: String,
+        /// Edit ID
+        edit_id: String,
+    },
     /// Delete a draft edit
     Delete {
         /// Application ID
@@ -58,9 +70,29 @@ pub async fn run(
             )
             .await
         }
+        EditsCommands::GetPrevious { app_id } => {
+            exec::api_get(
+                &format!("/applications/{app_id}/edits/previous"),
+                format,
+                dry_run,
+                timeout,
+            )
+            .await
+        }
+        EditsCommands::Validate { app_id, edit_id } => {
+            exec::api_post_with_etag(
+                &format!("/applications/{app_id}/edits/{edit_id}/validate"),
+                &format!("/applications/{app_id}/edits"),
+                format,
+                dry_run,
+                timeout,
+            )
+            .await
+        }
         EditsCommands::Delete { app_id, edit_id } => {
-            exec::api_delete(
+            exec::api_delete_with_etag(
                 &format!("/applications/{app_id}/edits/{edit_id}"),
+                &format!("/applications/{app_id}/edits"),
                 format,
                 dry_run,
                 timeout,
@@ -68,9 +100,9 @@ pub async fn run(
             .await
         }
         EditsCommands::Commit { app_id, edit_id } => {
-            exec::api_post(
+            exec::api_post_with_etag(
                 &format!("/applications/{app_id}/edits/{edit_id}/commit"),
-                &serde_json::json!({}),
+                &format!("/applications/{app_id}/edits"),
                 format,
                 dry_run,
                 timeout,

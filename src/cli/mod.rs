@@ -7,6 +7,7 @@ pub mod exec;
 pub mod helpers;
 pub mod images;
 pub mod listings;
+pub mod targeting;
 pub mod videos;
 
 use clap::Subcommand;
@@ -57,6 +58,11 @@ pub enum Commands {
     Availability {
         #[command(subcommand)]
         command: availability::AvailabilityCommands,
+    },
+    /// Manage APK device targeting
+    Targeting {
+        #[command(subcommand)]
+        command: targeting::TargetingCommands,
     },
     /// Helper workflows (compound commands)
     #[command(name = "+publish")]

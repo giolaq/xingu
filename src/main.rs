@@ -76,6 +76,9 @@ async fn run(cli: Cli) -> Result<()> {
         Commands::Availability { command } => {
             cli::availability::run(command, format, dry_run, timeout).await
         }
+        Commands::Targeting { command } => {
+            cli::targeting::run(command, format, dry_run, timeout).await
+        }
         Commands::Publish(args) => cli::helpers::publish(args, format, dry_run, timeout).await,
         Commands::Status(args) => cli::helpers::status(args, format, dry_run, timeout).await,
         Commands::UpdateListing(args) => {

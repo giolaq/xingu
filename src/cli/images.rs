@@ -7,13 +7,16 @@ use crate::output::OutputFormat;
 
 #[derive(Subcommand)]
 pub enum ImagesCommands {
-    /// List images for a given type
+    /// List images for a locale and image type
     List {
         /// Application ID
         app_id: String,
         /// Edit ID
         edit_id: String,
-        /// Image type (e.g. screenshots, icon, etc.)
+        /// Locale code (e.g. en-US)
+        #[arg(long)]
+        locale: String,
+        /// Image type (e.g. screenshots, small-icons, large-icons, etc.)
         #[arg(long)]
         image_type: String,
     },
@@ -23,6 +26,9 @@ pub enum ImagesCommands {
         app_id: String,
         /// Edit ID
         edit_id: String,
+        /// Locale code (e.g. en-US)
+        #[arg(long)]
+        locale: String,
         /// Image type
         #[arg(long)]
         image_type: String,
@@ -30,15 +36,34 @@ pub enum ImagesCommands {
         #[arg(long)]
         file: PathBuf,
     },
-    /// Delete an image
+    /// Delete a specific image
     Delete {
         /// Application ID
         app_id: String,
         /// Edit ID
         edit_id: String,
-        /// Image ID to delete
+        /// Locale code (e.g. en-US)
+        #[arg(long)]
+        locale: String,
+        /// Image type
+        #[arg(long)]
+        image_type: String,
+        /// Image asset ID to delete
         #[arg(long)]
         image_id: String,
+    },
+    /// Delete all images of a given type for a locale
+    DeleteAll {
+        /// Application ID
+        app_id: String,
+        /// Edit ID
+        edit_id: String,
+        /// Locale code (e.g. en-US)
+        #[arg(long)]
+        locale: String,
+        /// Image type
+        #[arg(long)]
+        image_type: String,
     },
 }
 
@@ -48,31 +73,29 @@ pub async fn run(
     dry_run: bool,
     timeout: u64,
 ) -> Result<()> {
+    let base = |app_id: &str, edit_id: &str, locale: &str, image_type: &str| {
+        format!("/applications/{app_id}/edits/{edit_id}/listings/{locale}/{image_type}")
+    };
+
     match cmd {
         ImagesCommands::List {
             app_id,
             edit_id,
+            locale,
             image_type,
-        } => {
-            exec::api_get(
-                &format!("/applications/{app_id}/edits/{edit_id}/images/{image_type}"),
-                format,
-                dry_run,
-                timeout,
-            )
-            .await
-        }
+        } => exec::api_get(&base(app_id, edit_id, locale, image_type), format, dry_run, timeout).await,
         ImagesCommands::Upload {
             app_id,
             edit_id,
+            locale,
             image_type,
             file,
         } => {
-            let content_type = exec::content_type_for_image(file);
+            let ct = exec::content_type_for_image(file);
             exec::api_upload(
-                &format!("/applications/{app_id}/edits/{edit_id}/images/{image_type}/upload"),
+                &format!("{}/upload", base(app_id, edit_id, locale, image_type)),
                 file,
-                content_type,
+                ct,
                 format,
                 dry_run,
                 timeout,
@@ -82,10 +105,22 @@ pub async fn run(
         ImagesCommands::Delete {
             app_id,
             edit_id,
+            locale,
+            image_type,
             image_id,
         } => {
-            exec::api_delete(
-                &format!("/applications/{app_id}/edits/{edit_id}/images/{image_id}"),
+            let path = format!("{}/{image_id}", base(app_id, edit_id, locale, image_type));
+            exec::api_delete_with_etag(&path, &base(app_id, edit_id, locale, image_type), format, dry_run, timeout).await
+        }
+        ImagesCommands::DeleteAll {
+            app_id,
+            edit_id,
+            locale,
+            image_type,
+        } => {
+            exec::api_delete_with_etag(
+                &base(app_id, edit_id, locale, image_type),
+                &base(app_id, edit_id, locale, image_type),
                 format,
                 dry_run,
                 timeout,

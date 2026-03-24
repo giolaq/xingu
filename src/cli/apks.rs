@@ -14,6 +14,15 @@ pub enum ApksCommands {
         /// Edit ID
         edit_id: String,
     },
+    /// Get details of a specific APK
+    Get {
+        /// Application ID
+        app_id: String,
+        /// Edit ID
+        edit_id: String,
+        /// APK ID
+        apk_id: String,
+    },
     /// Upload a new APK
     Upload {
         /// Application ID
@@ -24,7 +33,7 @@ pub enum ApksCommands {
         #[arg(long)]
         file: PathBuf,
     },
-    /// Replace an existing APK
+    /// Replace an existing APK (preserves device targeting)
     Replace {
         /// Application ID
         app_id: String,
@@ -65,6 +74,19 @@ pub async fn run(
             )
             .await
         }
+        ApksCommands::Get {
+            app_id,
+            edit_id,
+            apk_id,
+        } => {
+            exec::api_get(
+                &format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}"),
+                format,
+                dry_run,
+                timeout,
+            )
+            .await
+        }
         ApksCommands::Upload {
             app_id,
             edit_id,
@@ -87,7 +109,7 @@ pub async fn run(
             file,
         } => {
             exec::api_replace(
-                &format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}"),
+                &format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}/replace"),
                 file,
                 APK_CONTENT_TYPE,
                 format,
@@ -101,7 +123,8 @@ pub async fn run(
             edit_id,
             apk_id,
         } => {
-            exec::api_delete(
+            exec::api_delete_with_etag(
+                &format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}"),
                 &format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}"),
                 format,
                 dry_run,
