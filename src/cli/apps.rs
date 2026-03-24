@@ -22,7 +22,16 @@ pub async fn run(
     timeout: u64,
 ) -> Result<()> {
     match cmd {
-        AppsCommands::List => exec::api_get("/applications", format, dry_run, timeout).await,
+        AppsCommands::List => {
+            anyhow::bail!(
+                "The Amazon App Submission API does not support listing all apps.\n\
+                 Get your App ID from the Developer Console:\n\
+                 1. Go to https://developer.amazon.com/dashboard\n\
+                 2. Navigate to My Apps → select your app\n\
+                 3. Find the App ID under Additional Information\n\n\
+                 Then use: xingu apps get <app-id>"
+            );
+        }
         AppsCommands::Get { app_id } => {
             exec::api_get(&format!("/applications/{app_id}"), format, dry_run, timeout).await
         }
