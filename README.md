@@ -54,10 +54,7 @@ xingu auth login
 ## Usage
 
 ```bash
-# List all your apps
-xingu apps list
-
-# Get app details
+# Get app details (App ID from Developer Console → My Apps → Additional Information)
 xingu apps get <app-id>
 
 # Create an edit (draft version)
@@ -86,7 +83,6 @@ xingu +update-listing <app-id> --locale en-US --title "My App" --description "..
 | `auth setup` | Configure API credentials |
 | `auth login` | Acquire fresh OAuth token |
 | `auth token` | Print current access token |
-| `apps list` | List all apps |
 | `apps get` | Get app details |
 | `edits create/get/delete/commit` | Manage edits |
 | `apks list/upload/replace/delete` | Manage APK files |

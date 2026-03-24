@@ -21,10 +21,10 @@ immediate success, network error propagation.
 Switch to `reqwest::Body::wrap_stream` with `tokio::fs::File` for streaming.
 **Effort:** M | **Depends on:** nothing
 
-### Pagination Support for `apps list`
-Amazon API may paginate large app lists. Current code returns only the first page.
-Add `--limit` flag and auto-pagination with cursor/token support.
-**Effort:** M | **Depends on:** verifying Amazon's pagination format
+### ~~Pagination Support for `apps list`~~
+~~Amazon API may paginate large app lists. Current code returns only the first page.~~
+~~Add `--limit` flag and auto-pagination with cursor/token support.~~
+**Removed:** The Amazon App Submission API has no list-apps endpoint.
 
 ## P3 — Polish
 
