@@ -83,7 +83,15 @@ pub async fn run(
             edit_id,
             locale,
             image_type,
-        } => exec::api_get(&base(app_id, edit_id, locale, image_type), format, dry_run, timeout).await,
+        } => {
+            exec::api_get(
+                &base(app_id, edit_id, locale, image_type),
+                format,
+                dry_run,
+                timeout,
+            )
+            .await
+        }
         ImagesCommands::Upload {
             app_id,
             edit_id,
@@ -110,7 +118,14 @@ pub async fn run(
             image_id,
         } => {
             let path = format!("{}/{image_id}", base(app_id, edit_id, locale, image_type));
-            exec::api_delete_with_etag(&path, &base(app_id, edit_id, locale, image_type), format, dry_run, timeout).await
+            exec::api_delete_with_etag(
+                &path,
+                &base(app_id, edit_id, locale, image_type),
+                format,
+                dry_run,
+                timeout,
+            )
+            .await
         }
         ImagesCommands::DeleteAll {
             app_id,

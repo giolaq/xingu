@@ -143,7 +143,10 @@ pub async fn status(
     let client = ApiClient::new(timeout).await?;
 
     let edit_path = format!("/applications/{}/edits", args.app_id);
-    let edit = client.get(&edit_path).await.context("failed to get active edit")?;
+    let edit = client
+        .get(&edit_path)
+        .await
+        .context("failed to get active edit")?;
 
     let output = serde_json::json!({
         "appId": args.app_id,

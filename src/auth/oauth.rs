@@ -16,7 +16,11 @@ pub async fn fetch_reporting_token(client_id: &str, client_secret: &str) -> Resu
     fetch_token_with_scope(client_id, client_secret, REPORTING_SCOPE).await
 }
 
-async fn fetch_token_with_scope(client_id: &str, client_secret: &str, scope: &str) -> Result<String> {
+async fn fetch_token_with_scope(
+    client_id: &str,
+    client_secret: &str,
+    scope: &str,
+) -> Result<String> {
     let client = reqwest::ClientBuilder::new()
         .timeout(Duration::from_secs(OAUTH_TIMEOUT_SECS))
         .build()

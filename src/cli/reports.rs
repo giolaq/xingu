@@ -79,10 +79,7 @@ pub async fn run(
         bail!("No report URL returned. The report may not be available.");
     }
 
-    print_output(
-        &serde_json::json!({ "downloadUrl": s3_url }),
-        format,
-    );
+    print_output(&serde_json::json!({ "downloadUrl": s3_url }), format);
     Ok(())
 }
 
