@@ -65,6 +65,8 @@ pub async fn api_delete_with_etag(
     }
     let client = ApiClient::new(timeout).await?;
     let _ = client.get(etag_path).await?;
+    // Copy ETag from etag_path to path so delete can find it
+    client.copy_etag(etag_path, path);
     let result = client.delete(path).await?;
     print_output(&result, format);
     Ok(())
@@ -84,6 +86,8 @@ pub async fn api_post_with_etag(
     }
     let client = ApiClient::new(timeout).await?;
     let _ = client.get(etag_path).await?;
+    // Copy ETag from etag_path to path so post can find it
+    client.copy_etag(etag_path, path);
     let result = client.post(path, &serde_json::json!({})).await?;
     print_output(&result, format);
     Ok(())

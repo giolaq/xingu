@@ -134,6 +134,12 @@ impl ApiClient {
         self.etags.lock().unwrap().get(path).cloned()
     }
 
+    pub fn copy_etag(&self, from: &str, to: &str) {
+        if let Some(etag) = self.get_etag(from) {
+            self.store_etag(to, &etag);
+        }
+    }
+
     fn log_request(method: &str, url: &str) {
         if is_verbose() {
             eprintln!("[verbose] --> {} {}", method, url);
@@ -325,18 +331,19 @@ impl ApiClient {
     pub async fn post(&self, path: &str, body: &serde_json::Value) -> Result<serde_json::Value> {
         let url = self.url(path);
         let body = body.clone();
+        let etag = self.get_etag(path);
         let result = self
             .execute_with_retry("POST", &url, |headers| {
                 let http = self.http.clone();
                 let url = url.clone();
                 let body = body.clone();
+                let etag = etag.clone();
                 async move {
-                    http.post(&url)
-                        .headers(headers)
-                        .json(&body)
-                        .send()
-                        .await
-                        .context("HTTP request failed")
+                    let mut req = http.post(&url).headers(headers).json(&body);
+                    if let Some(etag) = etag {
+                        req = req.header(IF_MATCH, etag);
+                    }
+                    req.send().await.context("HTTP request failed")
                 }
             })
             .await?;
