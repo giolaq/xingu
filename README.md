@@ -245,7 +245,7 @@ Credentials are stored in the OS keyring (macOS Keychain, Linux secret-service) 
 
 ## Disclaimer
 
-This is an unofficial, community-built tool. It is not affiliated with, endorsed by, or supported by Amazon. "Amazon", "Amazon Appstore", and related names are trademarks of Amazon.com, Inc.
+This is an unofficial, community-built tool. "Amazon", "Amazon Appstore", and related names are trademarks of Amazon.com, Inc.
 
 ## License
 
