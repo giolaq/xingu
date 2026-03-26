@@ -2,6 +2,12 @@
 name = "xingu"
 version = "0.1.1"
 edition = "2021"
+description = "Unofficial Amazon AppStore CLI — for humans and agents"
+license = "MIT"
+repository = "https://github.com/laquigi/xingu"
+readme = "README.md"
+keywords = ["amazon", "appstore", "cli", "fire-tv"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.102"

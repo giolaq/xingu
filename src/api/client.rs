@@ -262,7 +262,8 @@ impl ApiClient {
                     && !auth_retried
                 {
                     let body_peek = resp.text().await.context("failed to read response body")?;
-                    let is_api_error = body_peek.contains("errorCode") || body_peek.contains("errorMessage");
+                    let is_api_error =
+                        body_peek.contains("errorCode") || body_peek.contains("errorMessage");
 
                     if status == StatusCode::FORBIDDEN && is_api_error {
                         // This is a validation error, not auth — don't retry
