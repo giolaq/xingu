@@ -11,16 +11,33 @@
 
 ## Install
 
+### From crates.io (recommended)
+
+```bash
+cargo install xingu
+```
+
+### From GitHub Releases
+
+Download a prebuilt binary from the [Releases](https://github.com/giolaq/xingu/releases) page:
+
+| Platform | Binary |
+|----------|--------|
+| macOS (Apple Silicon) | `xingu-macos-arm64` |
+| macOS (Intel) | `xingu-macos-amd64` |
+| Linux (x86_64) | `xingu-linux-amd64` |
+
+```bash
+# Example: macOS Apple Silicon
+curl -L -o xingu https://github.com/giolaq/xingu/releases/latest/download/xingu-macos-arm64
+chmod +x xingu
+sudo mv xingu /usr/local/bin/
+```
+
 ### From source
 
 ```bash
-cargo install --path .
-```
-
-### Build from repo
-
-```bash
-git clone <repo-url>
+git clone https://github.com/giolaq/xingu.git
 cd xingu
 cargo build --release
 ./target/release/xingu --help
