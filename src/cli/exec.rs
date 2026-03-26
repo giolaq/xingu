@@ -111,6 +111,29 @@ pub async fn api_upload(
     Ok(())
 }
 
+/// Upload that first GETs an ETag from `etag_path`, then uploads to `path`.
+pub async fn api_upload_with_etag(
+    path: &str,
+    etag_path: &str,
+    file_path: &Path,
+    content_type: &str,
+    format: OutputFormat,
+    dry_run: bool,
+    timeout: u64,
+) -> Result<()> {
+    if dry_run {
+        println!("POST {path} (file: {})", file_path.display());
+        return Ok(());
+    }
+    let client = ApiClient::new(timeout).await?;
+    let _ = client.get(etag_path).await?;
+    client.copy_etag(etag_path, path);
+    let result = client.upload_file(path, file_path, content_type).await?;
+    print_output(&result, format);
+    Ok(())
+}
+
+#[allow(dead_code)]
 pub async fn api_replace(
     path: &str,
     file_path: &Path,
@@ -124,6 +147,28 @@ pub async fn api_replace(
         return Ok(());
     }
     let client = ApiClient::new(timeout).await?;
+    let result = client.replace_file(path, file_path, content_type).await?;
+    print_output(&result, format);
+    Ok(())
+}
+
+/// Replace that first GETs an ETag from `etag_path`, then replaces at `path`.
+pub async fn api_replace_with_etag(
+    path: &str,
+    etag_path: &str,
+    file_path: &Path,
+    content_type: &str,
+    format: OutputFormat,
+    dry_run: bool,
+    timeout: u64,
+) -> Result<()> {
+    if dry_run {
+        println!("PUT {path} (file: {})", file_path.display());
+        return Ok(());
+    }
+    let client = ApiClient::new(timeout).await?;
+    let _ = client.get(etag_path).await?;
+    client.copy_etag(etag_path, path);
     let result = client.replace_file(path, file_path, content_type).await?;
     print_output(&result, format);
     Ok(())

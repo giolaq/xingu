@@ -108,8 +108,10 @@ pub async fn run(
             apk_id,
             file,
         } => {
-            exec::api_replace(
-                &format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}/replace"),
+            let etag_path = format!("/applications/{app_id}/edits/{edit_id}/apks/{apk_id}");
+            exec::api_replace_with_etag(
+                &format!("{}/replace", etag_path),
+                &etag_path,
                 file,
                 APK_CONTENT_TYPE,
                 format,

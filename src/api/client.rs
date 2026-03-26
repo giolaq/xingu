@@ -184,8 +184,18 @@ impl ApiClient {
             Ok(value)
         } else {
             let body = value["error"].as_str().unwrap_or("unknown error");
+            // Amazon API returns 403 for both auth failures and validation errors.
+            // If the body contains structured error codes, it's a validation error, not auth.
+            let is_api_error = body.contains("errorCode") || body.contains("errorMessage");
             match status {
-                StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+                StatusCode::UNAUTHORIZED => {
+                    bail!(
+                        "Authentication failed ({}). Run `xingu auth login` to refresh your token.\n{}",
+                        status,
+                        body
+                    );
+                }
+                StatusCode::FORBIDDEN if !is_api_error => {
                     bail!(
                         "Authentication failed ({}). Run `xingu auth login` to refresh your token.\n{}",
                         status,
@@ -247,10 +257,20 @@ impl ApiClient {
                     continue;
                 }
 
-                // Handle 401/403 with one token refresh
+                // Handle 401/403 with one token refresh (only if not an API validation error)
                 if (status == StatusCode::UNAUTHORIZED || status == StatusCode::FORBIDDEN)
                     && !auth_retried
                 {
+                    let body_peek = resp.text().await.context("failed to read response body")?;
+                    let is_api_error = body_peek.contains("errorCode") || body_peek.contains("errorMessage");
+
+                    if status == StatusCode::FORBIDDEN && is_api_error {
+                        // This is a validation error, not auth — don't retry
+                        let value = Self::check_response_sync(status, &body_peek)?;
+                        let value = Self::result_from_status(status, value)?;
+                        return Ok(RetryResult { value, etag });
+                    }
+
                     auth_retried = true;
                     if is_verbose() {
                         eprintln!("[verbose] Auth failed. Refreshing token and retrying...");
@@ -258,6 +278,10 @@ impl ApiClient {
                     if self.refresh_token().await.is_ok() {
                         break; // break inner loop, re-enter outer loop with new token
                     }
+                    // Token refresh failed — fall through to parse the original error
+                    let value = Self::check_response_sync(status, &body_peek)?;
+                    let value = Self::result_from_status(status, value)?;
+                    return Ok(RetryResult { value, etag });
                 }
 
                 // Parse and return

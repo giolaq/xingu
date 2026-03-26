@@ -100,8 +100,10 @@ pub async fn run(
             file,
         } => {
             let ct = exec::content_type_for_image(file);
-            exec::api_upload(
-                &format!("{}/upload", base(app_id, edit_id, locale, image_type)),
+            let etag_path = base(app_id, edit_id, locale, image_type);
+            exec::api_upload_with_etag(
+                &format!("{}/upload", etag_path),
+                &etag_path,
                 file,
                 ct,
                 format,
