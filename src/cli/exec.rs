@@ -112,6 +112,7 @@ pub async fn api_upload(
 }
 
 /// Upload that first GETs an ETag from `etag_path`, then uploads to `path`.
+/// Falls back to the listing-level ETag if the image-type GET fails (e.g. no images yet).
 pub async fn api_upload_with_etag(
     path: &str,
     etag_path: &str,
@@ -126,8 +127,13 @@ pub async fn api_upload_with_etag(
         return Ok(());
     }
     let client = ApiClient::new(timeout).await?;
-    let _ = client.get(etag_path).await?;
-    client.copy_etag(etag_path, path);
+    if client.get(etag_path).await.is_ok() {
+        client.copy_etag(etag_path, path);
+    } else if let Some((listing_path, _)) = etag_path.rsplit_once('/') {
+        // Image-type list failed (e.g. empty); fall back to listing-level ETag
+        let _ = client.get(listing_path).await;
+        client.copy_etag(listing_path, path);
+    }
     let result = client.upload_file(path, file_path, content_type).await?;
     print_output(&result, format);
     Ok(())
