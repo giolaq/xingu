@@ -1,14 +1,19 @@
 pub mod apks;
 pub mod apps;
 pub mod availability;
+pub mod completions;
 pub mod details;
 pub mod edits;
 pub mod exec;
 pub mod helpers;
 pub mod images;
+pub mod info;
+pub mod init;
 pub mod listings;
 pub mod reports;
+pub mod skills;
 pub mod targeting;
+pub mod update;
 pub mod videos;
 
 use clap::Subcommand;
@@ -79,6 +84,22 @@ pub enum Commands {
     /// Update listing fields directly
     #[command(name = "+update-listing")]
     UpdateListing(helpers::UpdateListingArgs),
+    /// Show xingu environment info (config dir, caches, overrides)
+    Info,
+    /// Self-update the xingu binary from GitHub Releases
+    Update,
+    /// Initialize this project for agent use (writes AGENTS.md, detects agents)
+    Init,
+    /// Manage agent skills
+    Skills {
+        #[command(subcommand)]
+        command: skills::SkillsCommands,
+    },
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        shell: clap_complete::Shell,
+    },
 }
 
 #[derive(Subcommand)]

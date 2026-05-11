@@ -85,6 +85,11 @@ async fn run(cli: Cli) -> Result<()> {
         Commands::UpdateListing(args) => {
             cli::helpers::update_listing(args, format, dry_run, timeout).await
         }
+        Commands::Info => cli::info::run(format).await,
+        Commands::Update => cli::update::run(),
+        Commands::Init => cli::init::run(format),
+        Commands::Skills { command } => cli::skills::run(command, format),
+        Commands::Completions { shell } => cli::completions::run::<Cli>(*shell),
     }
 }
 

@@ -29,7 +29,7 @@ struct CachedToken {
     expires_at: u64,
 }
 
-fn config_dir() -> Result<PathBuf> {
+pub fn config_dir() -> Result<PathBuf> {
     let dir = dirs::config_dir()
         .context("could not determine config directory")?
         .join("xingu");

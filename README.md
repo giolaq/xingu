@@ -123,6 +123,11 @@ xingu reports subscription 2024 06
 | `+publish` | One-step: edit → upload → commit |
 | `+status` | App info + active edit summary |
 | `+update-listing` | Update listing fields directly |
+| `skills list/show/find/add` | Manage agent skills |
+| `init` | Initialize project for agent use (writes AGENTS.md) |
+| `info` | Show xingu environment info |
+| `update` | Self-update from GitHub Releases |
+| `completions <shell>` | Generate shell completions (bash, zsh, fish) |
 
 ## Global flags
 
@@ -231,18 +236,40 @@ Tokens expire after ~1 hour. Agents should:
 
 ### Skills
 
-YAML skill definitions in `skills/` for common workflows:
+Skills are Markdown runbooks that agents read and follow. Each lives in its own directory under `skills/<name>/SKILL.md`. Use `xingu skills` to manage them:
 
-| Skill | File | Description |
-|-------|------|-------------|
-| Publish app | `publish-app.yaml` | One-step: edit → upload → commit |
-| Upload APK | `upload-apk.yaml` | Upload APK to an existing edit |
-| Update listing | `update-listing.yaml` | Update store listing fields per locale |
-| Check status | `check-status.yaml` | Get app info + active edit |
-| Validate edit | `validate-edit.yaml` | Validate an edit before committing |
-| Check targeting | `check-targeting.yaml` | View APK device targeting |
+```bash
+# List all bundled skills
+xingu skills list
 
-Skills use Jinja-style templates with required/optional parameters. See individual YAML files for details.
+# Show a skill's full instructions
+xingu skills show full-release
+
+# Install skills into ~/.xingu/skills and detected agent directories
+xingu skills add
+
+# Install a single skill
+xingu skills add --skill upload-apk
+```
+
+`skills add` installs into `~/.xingu/skills/` and auto-detects agent skill directories (`~/.claude/skills/`, `~/.gemini/skills/`, `~/.kiro/skills/`, `~/.cursor/skills/`).
+
+| Skill | Description |
+|-------|-------------|
+| `check-status` | Get app info, active edit status, and suggest next actions |
+| `check-targeting` | View and interpret device targeting for an APK |
+| `create-edit` | Create a new draft edit — required before any changes |
+| `upload-apk` | Upload a new APK file to an existing edit |
+| `update-listing` | Update store listing metadata for a locale |
+| `manage-screenshots` | Upload, list, or replace screenshots |
+| `validate-edit` | Validate an edit before committing |
+| `commit-edit` | Submit an edit for Amazon review |
+| `delete-edit` | Delete a draft edit to cancel or recover |
+| `publish-app` | One-step: edit → upload → commit |
+| `full-release` | Orchestrated workflow: edit → APK → listing → screenshots → validate → commit |
+| `get-report` | Download sales, earnings, or subscription reports |
+| `troubleshoot-validation` | Diagnose and fix validation errors |
+| `rollback-edit` | Recover from a stuck or failed edit state |
 
 ## Security
 
