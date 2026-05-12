@@ -1,6 +1,16 @@
+---
+name: delete-edit
+description: Delete a draft edit to discard all changes or recover from a stuck state. Use when you need to start over or clean up a failed operation.
+depends_on: []
+---
+
 # delete-edit
 
-Delete a draft edit — use to cancel changes or recover from a stuck state.
+Delete a draft edit. Use to cancel changes or recover from a stuck state.
+
+## When to use
+
+Use when an edit is in a bad state (failed upload, inconsistent, want to start over). For diagnosing the problem before deleting, use `rollback-edit` which checks state first.
 
 ## Parameters
 
@@ -23,16 +33,15 @@ xingu edits delete <app_id> <edit_id>
 ## Interpreting the result
 
 - The edit and all its changes (APKs, listing updates, screenshots) are discarded.
-- You can now create a fresh edit with `create-edit`.
+- Create a fresh edit with `xingu edits create <app_id>`.
 
 ## Error handling
 
-- 404: The edit doesn't exist — it may have already been deleted or committed.
-- 403: The edit is not in DRAFT status (may be IN_REVIEW). Cannot delete edits under review.
+- 404: The edit doesn't exist. Already deleted or committed.
+- 403: Not in DRAFT status (may be IN_REVIEW). Cannot delete edits under review.
 - ETag conflict (412): Retry the command.
 
 ## Notes
 
-- This is a destructive operation — all uncommitted work in the edit is lost.
-- Use this to recover when an edit is in a bad state (failed upload, inconsistent state, want to start over).
-- After deleting, create a new edit to start over.
+- Destructive: all uncommitted work in the edit is lost.
+- After deleting, the app remains in its last published state.

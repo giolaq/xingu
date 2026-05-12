@@ -71,9 +71,19 @@ fn agent_skill_dirs() -> Vec<(&'static str, PathBuf)> {
 }
 
 fn description_of(md: &str) -> String {
+    if md.starts_with("---") {
+        for line in md.lines().skip(1) {
+            if line.trim() == "---" {
+                break;
+            }
+            if let Some(desc) = line.strip_prefix("description:") {
+                return desc.trim().trim_end_matches('.').to_string();
+            }
+        }
+    }
     md.lines()
-        .skip_while(|l| l.starts_with('#') || l.trim().is_empty())
-        .find(|l| !l.trim().is_empty())
+        .skip_while(|l| l.starts_with('#') || l.starts_with("---") || l.trim().is_empty())
+        .find(|l| !l.trim().is_empty() && !l.starts_with("---"))
         .unwrap_or("")
         .trim()
         .trim_end_matches('.')
