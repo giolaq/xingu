@@ -43,7 +43,7 @@ async fn fetch_token_with_scope(
     let body = resp.text().await.context("failed to read token response")?;
 
     if !status.is_success() {
-        bail!("OAuth token request failed ({}): {}", status, body);
+        bail!("OAuth token request failed ({status}): {body}");
     }
 
     let token_resp: TokenResponse =

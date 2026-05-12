@@ -8,20 +8,62 @@ use crate::output::{print_output, OutputFormat};
 
 // Bundled skills shipped with the binary.
 const BUNDLED: &[(&str, &str)] = &[
-    ("check-status", include_str!("../../skills/check-status/SKILL.md")),
-    ("check-targeting", include_str!("../../skills/check-targeting/SKILL.md")),
-    ("commit-edit", include_str!("../../skills/commit-edit/SKILL.md")),
-    ("create-edit", include_str!("../../skills/create-edit/SKILL.md")),
-    ("delete-edit", include_str!("../../skills/delete-edit/SKILL.md")),
-    ("full-release", include_str!("../../skills/full-release/SKILL.md")),
-    ("get-report", include_str!("../../skills/get-report/SKILL.md")),
-    ("manage-screenshots", include_str!("../../skills/manage-screenshots/SKILL.md")),
-    ("publish-app", include_str!("../../skills/publish-app/SKILL.md")),
-    ("rollback-edit", include_str!("../../skills/rollback-edit/SKILL.md")),
-    ("troubleshoot-validation", include_str!("../../skills/troubleshoot-validation/SKILL.md")),
-    ("update-listing", include_str!("../../skills/update-listing/SKILL.md")),
-    ("upload-apk", include_str!("../../skills/upload-apk/SKILL.md")),
-    ("validate-edit", include_str!("../../skills/validate-edit/SKILL.md")),
+    (
+        "check-status",
+        include_str!("../../skills/check-status/SKILL.md"),
+    ),
+    (
+        "check-targeting",
+        include_str!("../../skills/check-targeting/SKILL.md"),
+    ),
+    (
+        "commit-edit",
+        include_str!("../../skills/commit-edit/SKILL.md"),
+    ),
+    (
+        "create-edit",
+        include_str!("../../skills/create-edit/SKILL.md"),
+    ),
+    (
+        "delete-edit",
+        include_str!("../../skills/delete-edit/SKILL.md"),
+    ),
+    (
+        "full-release",
+        include_str!("../../skills/full-release/SKILL.md"),
+    ),
+    (
+        "get-report",
+        include_str!("../../skills/get-report/SKILL.md"),
+    ),
+    (
+        "manage-screenshots",
+        include_str!("../../skills/manage-screenshots/SKILL.md"),
+    ),
+    (
+        "publish-app",
+        include_str!("../../skills/publish-app/SKILL.md"),
+    ),
+    (
+        "rollback-edit",
+        include_str!("../../skills/rollback-edit/SKILL.md"),
+    ),
+    (
+        "troubleshoot-validation",
+        include_str!("../../skills/troubleshoot-validation/SKILL.md"),
+    ),
+    (
+        "update-listing",
+        include_str!("../../skills/update-listing/SKILL.md"),
+    ),
+    (
+        "upload-apk",
+        include_str!("../../skills/upload-apk/SKILL.md"),
+    ),
+    (
+        "validate-edit",
+        include_str!("../../skills/validate-edit/SKILL.md"),
+    ),
 ];
 
 #[derive(Subcommand)]
@@ -29,13 +71,9 @@ pub enum SkillsCommands {
     /// List available skills
     List,
     /// Show skill contents
-    Show {
-        name: String,
-    },
+    Show { name: String },
     /// Find skills matching a string
-    Find {
-        query: String,
-    },
+    Find { query: String },
     /// Install skills to ~/.xingu/skills (and detected agent dirs)
     Add {
         /// Specific skill name; if omitted installs all bundled skills

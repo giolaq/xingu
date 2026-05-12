@@ -79,7 +79,7 @@ pub async fn run(
         } => {
             let etag_path = base(app_id, edit_id, locale);
             exec::api_upload_with_etag(
-                &format!("{}/upload", etag_path),
+                &format!("{etag_path}/upload"),
                 &etag_path,
                 file,
                 "video/mp4",

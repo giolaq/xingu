@@ -4,7 +4,7 @@ pub fn print_table(value: &serde_json::Value) {
     match value {
         serde_json::Value::Array(arr) => print_array_table(arr),
         serde_json::Value::Object(obj) => print_object_table(obj),
-        _ => println!("{}", value),
+        _ => println!("{value}"),
     }
 }
 
