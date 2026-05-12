@@ -1,6 +1,16 @@
+---
+name: validate-edit
+description: Validate an edit before committing to catch errors early. Always run this before commit-edit.
+depends_on: [upload-apk]
+---
+
 # validate-edit
 
-Validate an edit before committing — catches errors early without submitting.
+Validate an edit before committing. Catches errors early without submitting.
+
+## When to use
+
+Always run this before `xingu edits commit`. It's free, idempotent, and saves you from rejected submissions.
 
 ## Parameters
 
@@ -22,27 +32,25 @@ xingu edits validate <app_id> <edit_id>
 
 ## Interpreting the result
 
-- No errors: The edit is ready to commit with `xingu edits commit <app_id> <edit_id>`.
-- Warnings: Non-blocking issues are reported but won't prevent submission.
-- Errors: Must be fixed before committing. Use `troubleshoot-validation` for guidance.
+- No errors: Ready to commit with `xingu edits commit <app_id> <edit_id>`.
+- Warnings: Non-blocking, won't prevent submission.
+- Errors: Must be fixed before committing. See the troubleshoot-validation skill for a diagnosis table.
 
 ## Error handling
 
-- ETag conflict (412): Retry — another process may have modified the edit.
+- ETag conflict (412): Retry.
 - Edit not found (404): The edit was deleted or already committed.
 
 ## Common validation failures
 
-- Missing APK: Upload one with `upload-apk`.
-- Missing listing for required locale: Add via `update-listing`.
-- Missing screenshots: Upload with `manage-screenshots`.
-- Icon missing: Upload with `xingu images upload` (image_type: `small-icons` or `large-icons`).
+- Missing APK: `xingu apks upload <app_id> <edit_id> --file <path>`
+- Missing listing: `xingu +update-listing <app_id> --locale en-US --title "..."`
+- Missing screenshots: `xingu images upload <app_id> <edit_id> --locale en-US --image-type screenshots --file <path>`
+- Missing icon: `xingu images upload <app_id> <edit_id> --locale en-US --image-type small-icons --file icon.png`
 - Version code not incremented: Rebuild APK with higher versionCode.
-- Content rating missing: Must be set in the Developer Console UI.
+- Content rating missing: Must be set in the Developer Console UI (not available via API).
 
 ## Notes
 
-- Validation is idempotent — safe to run multiple times.
-- Always validate before committing to avoid failed submissions.
-- Some issues (like content rating) can only be fixed in the web console.
-- For detailed error diagnosis, use the `troubleshoot-validation` skill.
+- Idempotent. Run as many times as needed.
+- Some issues (content rating, categories) can only be fixed in the web console.

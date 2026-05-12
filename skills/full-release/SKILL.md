@@ -1,6 +1,16 @@
+---
+name: full-release
+description: Orchestrated full release workflow — create edit, upload APK, update listing, add screenshots, validate, and commit. Use for complete app updates with metadata changes.
+depends_on: [check-status, create-edit, upload-apk, update-listing, manage-screenshots, validate-edit, commit-edit]
+---
+
 # full-release
 
 Orchestrated full release: create edit, upload APK, update listing, add screenshots, validate, and commit.
+
+## When to use
+
+Use for a complete app update that includes APK + listing changes + screenshots. For APK-only updates with no metadata changes, prefer `xingu +publish` (faster, atomic). Each step below can also be run independently.
 
 ## Parameters
 
@@ -9,78 +19,92 @@ Orchestrated full release: create edit, upload APK, update listing, add screensh
 | `app_id` | yes | The application ID |
 | `apk_file` | yes | Path to the APK file |
 | `locale` | no | Primary locale code (default: en-US) |
-| `title` | no | Updated app title (keeps current if omitted) |
+| `title` | no | Updated app title |
 | `description` | no | Updated full description |
 | `short_description` | no | Updated short description |
-| `recent_changes` | no | What's new text for this version |
+| `recent_changes` | no | What's new text |
 | `screenshot_files` | no | Paths to screenshot images (replaces existing if provided) |
 
 ## Preconditions
 
 - Auth configured (`xingu auth login` completed)
 - APK file exists and is valid
-- No active edit should exist (or you're okay deleting it)
-- If providing screenshots, files must be PNG or JPG
+- No active edit should exist (or delete the existing one first)
 
 ## Workflow
 
 ### Step 1 — Check current state
 
-Run `check-status` for the app.
+```sh
+xingu +status <app_id>
+```
 
-- If an active DRAFT edit exists: decide whether to reuse it or delete and start fresh.
-- If an IN_REVIEW edit exists: cannot proceed — wait for review to complete.
-- If no edit exists: proceed.
+- Active DRAFT edit exists: decide to reuse or delete with `xingu edits delete <app_id> <edit_id>`.
+- IN_REVIEW edit exists: cannot proceed. Wait for review.
+- No edit: proceed.
 
 ### Step 2 — Create edit
 
-Run `create-edit`. Save the `edit_id` from the response.
+```sh
+xingu edits create <app_id>
+```
 
-If this fails, abort.
+Save the `id` from the response as `<edit_id>`. If this fails, abort.
 
 ### Step 3 — Upload APK
 
-Run `upload-apk` with the `edit_id` and `apk_file`.
+```sh
+xingu apks upload <app_id> <edit_id> --file <apk_file>
+```
 
-If this fails, run `delete-edit` to clean up, then abort.
+If this fails, clean up with `xingu edits delete <app_id> <edit_id>`, then abort.
 
 ### Step 4 — Update listing (optional)
 
-If any of title, description, short_description, or recent_changes were provided, run `update-listing`.
+If title, description, short_description, or recent_changes are provided:
 
-If this fails, warn but continue — listing update is not blocking.
+```sh
+xingu +update-listing <app_id> --locale <locale> --title "..." --description "..." --recent-changes "..."
+```
+
+If this fails, warn but continue.
 
 ### Step 5 — Upload screenshots (optional)
 
-If screenshot_files were provided, run `manage-screenshots` with action `replace-all`.
+If screenshot_files are provided:
 
-If this fails, warn but continue — screenshots can be added later.
+```sh
+xingu images delete-all <app_id> <edit_id> --locale <locale> --image-type screenshots
+xingu images upload <app_id> <edit_id> --locale <locale> --image-type screenshots --file <path>
+```
+
+If this fails, warn but continue.
 
 ### Step 6 — Validate
 
-Run `validate-edit`.
+```sh
+xingu edits validate <app_id> <edit_id>
+```
 
-- If validation passes: proceed to commit.
-- If validation fails: use `troubleshoot-validation` to diagnose. Fix issues and re-validate.
-- If errors are unfixable via API (e.g., content rating): abort and inform the user what needs manual action.
+- Passes: proceed to commit.
+- Fails: diagnose with the troubleshoot-validation error table. Fix and re-validate.
+- Unfixable (content rating, etc.): abort and inform user what needs manual action.
 
 ### Step 7 — Commit
 
-Run `commit-edit`.
+```sh
+xingu edits commit <app_id> <edit_id>
+```
 
-On success: release submitted. Amazon review expected in 1-3 business days.
-
-On failure: the edit remains in DRAFT (not lost). Fix issues and retry commit.
+On success: release submitted. Amazon review in 1-3 business days.
+On failure: edit stays in DRAFT. Fix issues and retry.
 
 ## Rollback
 
-- If any step after create-edit fails, the edit can be deleted with `delete-edit`.
-- The edit is never auto-deleted on partial failure in this workflow (unlike `publish-app`).
-- This gives you the chance to inspect and fix rather than losing all progress.
+- If any step after create-edit fails, clean up: `xingu edits delete <app_id> <edit_id>`
+- Unlike `xingu +publish`, this workflow does NOT auto-delete on failure. You keep progress.
 
 ## Notes
 
-- This is the recommended workflow for a complete app update.
-- For APK-only updates with no listing changes, use `publish-app` instead (faster, atomic).
-- Each step can be run independently — this skill defines the recommended sequence.
-- Use `--dry-run` on individual commands to preview without executing.
+- Use `--dry-run` on individual commands to preview.
+- For APK-only updates, use `xingu +publish` instead.

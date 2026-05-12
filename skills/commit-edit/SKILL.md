@@ -1,6 +1,16 @@
+---
+name: commit-edit
+description: Submit an edit for Amazon review. Use after validate-edit passes to make changes live. Irreversible.
+depends_on: [validate-edit]
+---
+
 # commit-edit
 
-Commit (submit) an edit for Amazon review — makes changes live after approval.
+Commit (submit) an edit for Amazon review. Makes changes live after approval.
+
+## When to use
+
+Use after `xingu edits validate` passes with no errors. If you haven't validated yet, do that first. For a one-step publish, use `xingu +publish` instead.
 
 ## Parameters
 
@@ -12,7 +22,7 @@ Commit (submit) an edit for Amazon review — makes changes live after approval.
 ## Preconditions
 
 - Edit must be in DRAFT status
-- Recommended to run `validate-edit` first to catch issues
+- Run `xingu edits validate <app_id> <edit_id>` first to catch issues
 - At minimum, an APK must be attached to the edit
 
 ## Command
@@ -26,17 +36,16 @@ xingu edits commit <app_id> <edit_id>
 - The edit transitions to IN_REVIEW status.
 - Amazon typically reviews within 1-3 business days.
 - Once approved, changes go live automatically.
-- You cannot modify this edit after commit — create a new one for further changes.
+- You cannot modify this edit after commit. Create a new one for further changes.
 
 ## Error handling
 
-- Validation errors: Run `validate-edit` to see specific issues, fix them, then retry.
-- ETag conflict (412): The edit was modified externally. Retry the command.
-- Edit not found (404): The edit was deleted. Start over with `create-edit`.
-- 403: The edit may already be committed or in a non-modifiable state.
+- Validation errors: Run `xingu edits validate <app_id> <edit_id>` to see issues, fix them, retry.
+- ETag conflict (412): Retry the command.
+- Edit not found (404): The edit was deleted. Run `xingu edits create <app_id>`.
+- 403: The edit may already be committed.
 
 ## Notes
 
-- Commit is irreversible — once submitted you cannot pull it back.
-- If you realize there's an issue after commit, create a new edit with fixes.
+- Commit is irreversible. Once submitted you cannot pull it back.
 - Always validate before committing to avoid review rejection.
