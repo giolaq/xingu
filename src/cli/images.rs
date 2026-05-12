@@ -102,7 +102,7 @@ pub async fn run(
             let ct = exec::content_type_for_image(file);
             let etag_path = base(app_id, edit_id, locale, image_type);
             exec::api_upload_with_etag(
-                &format!("{}/upload", etag_path),
+                &format!("{etag_path}/upload"),
                 &etag_path,
                 file,
                 ct,

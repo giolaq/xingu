@@ -104,7 +104,7 @@ impl ApiClient {
     fn auth_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
         let token = self.token.lock().unwrap().clone();
-        let val = format!("Bearer {}", token);
+        let val = format!("Bearer {token}");
         headers.insert(AUTHORIZATION, HeaderValue::from_str(&val).unwrap());
         headers
     }
@@ -142,16 +142,13 @@ impl ApiClient {
 
     fn log_request(method: &str, url: &str) {
         if is_verbose() {
-            eprintln!("[verbose] --> {} {}", method, url);
+            eprintln!("[verbose] --> {method} {url}");
         }
     }
 
     fn log_response(method: &str, url: &str, status: StatusCode, elapsed: Duration) {
         if is_verbose() {
-            eprintln!(
-                "[verbose] <-- {} {} {} ({:.0?})",
-                method, url, status, elapsed
-            );
+            eprintln!("[verbose] <-- {method} {url} {status} ({elapsed:.0?})");
         }
     }
 
@@ -190,23 +187,19 @@ impl ApiClient {
             match status {
                 StatusCode::UNAUTHORIZED => {
                     bail!(
-                        "Authentication failed ({}). Run `xingu auth login` to refresh your token.\n{}",
-                        status,
-                        body
+                        "Authentication failed ({status}). Run `xingu auth login` to refresh your token.\n{body}"
                     );
                 }
                 StatusCode::FORBIDDEN if !is_api_error => {
                     bail!(
-                        "Authentication failed ({}). Run `xingu auth login` to refresh your token.\n{}",
-                        status,
-                        body
+                        "Authentication failed ({status}). Run `xingu auth login` to refresh your token.\n{body}"
                     );
                 }
                 StatusCode::TOO_MANY_REQUESTS => {
-                    bail!("Rate limited (429): {}", body);
+                    bail!("Rate limited (429): {body}");
                 }
                 _ => {
-                    bail!("API error ({}): {}", status, body);
+                    bail!("API error ({status}): {body}");
                 }
             }
         }
@@ -251,7 +244,7 @@ impl ApiClient {
                 if status == StatusCode::TOO_MANY_REQUESTS && attempt < MAX_429_RETRIES {
                     let wait = Duration::from_secs(2u64.pow(attempt));
                     if is_verbose() {
-                        eprintln!("[verbose] Rate limited. Retrying in {:.0?}...", wait);
+                        eprintln!("[verbose] Rate limited. Retrying in {wait:.0?}...");
                     }
                     tokio::time::sleep(wait).await;
                     continue;
@@ -342,12 +335,10 @@ impl ApiClient {
         if !status.is_success() {
             if status == StatusCode::UNAUTHORIZED || status == StatusCode::FORBIDDEN {
                 bail!(
-                    "Authentication failed ({}). The Reporting API may require a separate security profile with scope `adx_reporting::appstore:marketer`.\n{}",
-                    status,
-                    body
+                    "Authentication failed ({status}). The Reporting API may require a separate security profile with scope `adx_reporting::appstore:marketer`.\n{body}"
                 );
             }
-            bail!("API error ({}): {}", status, body);
+            bail!("API error ({status}): {body}");
         }
 
         Ok(body)
