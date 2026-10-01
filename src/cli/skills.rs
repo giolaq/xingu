@@ -17,6 +17,10 @@ const BUNDLED: &[(&str, &str)] = &[
         include_str!("../../skills/check-targeting/SKILL.md"),
     ),
     (
+        "check-vitals",
+        include_str!("../../skills/check-vitals/SKILL.md"),
+    ),
+    (
         "commit-edit",
         include_str!("../../skills/commit-edit/SKILL.md"),
     ),

@@ -16,6 +16,7 @@ against developer.amazon.com.
 - `xingu +status <app-id>` — app info + active edit
 - `xingu +publish <app-id> --file app.apk` — edit → upload → commit
 - `xingu +update-listing <app-id> --locale en-US --title ...`
+- `xingu +health <package>` — crash/ANR/LMK rates + top issues (Vitals API)
 - `xingu --dry-run <any-command>` — preview without executing
 
 Output is JSON by default. Exit codes: 0 ok, 1 api, 2 auth, 3 validation, 4 network.

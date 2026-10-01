@@ -63,20 +63,22 @@ pub struct ApiClient {
     base_url: String,
     download_base_url: String,
     etags: Mutex<HashMap<String, String>>,
+    /// Client uses the Reporting API scope (reports + vitals).
+    reporting: bool,
 }
 
 impl ApiClient {
     pub async fn new(timeout_secs: u64) -> Result<Self> {
         let token = auth::get_token().await?;
-        Self::with_token(token, timeout_secs)
+        Self::with_token(token, timeout_secs, false)
     }
 
     pub async fn new_reporting(timeout_secs: u64) -> Result<Self> {
         let token = auth::get_reporting_token().await?;
-        Self::with_token(token, timeout_secs)
+        Self::with_token(token, timeout_secs, true)
     }
 
-    fn with_token(token: String, timeout_secs: u64) -> Result<Self> {
+    fn with_token(token: String, timeout_secs: u64, reporting: bool) -> Result<Self> {
         let base_url = match std::env::var("XINGU_BASE_URL") {
             Ok(url) => {
                 validate_base_url(&url)?;
@@ -98,6 +100,7 @@ impl ApiClient {
             base_url,
             download_base_url,
             etags: Mutex::new(HashMap::new()),
+            reporting,
         })
     }
 
@@ -110,7 +113,11 @@ impl ApiClient {
     }
 
     async fn refresh_token(&self) -> Result<()> {
-        let new_token = auth::force_refresh().await?;
+        let new_token = if self.reporting {
+            auth::force_refresh_reporting().await?
+        } else {
+            auth::force_refresh().await?
+        };
         *self.token.lock().unwrap() = new_token;
         Ok(())
     }
@@ -206,6 +213,7 @@ impl ApiClient {
     }
 
     /// Core retry engine. Handles 429 backoff (up to 3 retries) and one 401/403 token refresh.
+    /// Reporting clients (read-only) also back off on 500/502/503.
     /// Returns the parsed value and any ETag from the final successful response.
     ///
     /// ```text
@@ -240,11 +248,11 @@ impl ApiClient {
                 // Capture ETag before consuming body
                 let etag = Self::extract_etag(&resp);
 
-                // Handle 429 with backoff
-                if status == StatusCode::TOO_MANY_REQUESTS && attempt < MAX_429_RETRIES {
+                // Handle 429 (and 5xx for read-only reporting calls) with backoff
+                if Self::is_retriable(status, self.reporting) && attempt < MAX_429_RETRIES {
                     let wait = Duration::from_secs(2u64.pow(attempt));
                     if is_verbose() {
-                        eprintln!("[verbose] Rate limited. Retrying in {wait:.0?}...");
+                        eprintln!("[verbose] Got {status}. Retrying in {wait:.0?}...");
                     }
                     tokio::time::sleep(wait).await;
                     continue;
@@ -288,6 +296,61 @@ impl ApiClient {
         }
 
         bail!("Request failed after retries")
+    }
+
+    fn is_retriable(status: StatusCode, reporting: bool) -> bool {
+        status == StatusCode::TOO_MANY_REQUESTS
+            || (reporting
+                && matches!(
+                    status,
+                    StatusCode::INTERNAL_SERVER_ERROR
+                        | StatusCode::BAD_GATEWAY
+                        | StatusCode::SERVICE_UNAVAILABLE
+                ))
+    }
+
+    /// JSON GET against the Reporting API base URL (e.g. Vitals freshness).
+    pub async fn reporting_get(&self, path: &str) -> Result<serde_json::Value> {
+        let url = self.download_url(path);
+        let result = self
+            .execute_with_retry("GET", &url, |headers| {
+                let http = self.http.clone();
+                let url = url.clone();
+                async move {
+                    http.get(&url)
+                        .headers(headers)
+                        .send()
+                        .await
+                        .context("HTTP request failed")
+                }
+            })
+            .await?;
+        Ok(result.value)
+    }
+
+    /// JSON POST against the Reporting API base URL (e.g. Vitals `:query`).
+    pub async fn reporting_post(
+        &self,
+        path: &str,
+        body: &serde_json::Value,
+    ) -> Result<serde_json::Value> {
+        let url = self.download_url(path);
+        let result = self
+            .execute_with_retry("POST", &url, |headers| {
+                let http = self.http.clone();
+                let url = url.clone();
+                let body = body.clone();
+                async move {
+                    http.post(&url)
+                        .headers(headers)
+                        .json(&body)
+                        .send()
+                        .await
+                        .context("HTTP request failed")
+                }
+            })
+            .await?;
+        Ok(result.value)
     }
 
     pub async fn get(&self, path: &str) -> Result<serde_json::Value> {
@@ -539,6 +602,28 @@ mod tests {
         assert!(result.is_err());
         let msg = format!("{}", result.unwrap_err());
         assert!(msg.contains("API error (500 Internal Server Error)"));
+    }
+
+    #[test]
+    fn test_is_retriable() {
+        assert!(ApiClient::is_retriable(
+            StatusCode::TOO_MANY_REQUESTS,
+            false
+        ));
+        assert!(ApiClient::is_retriable(StatusCode::TOO_MANY_REQUESTS, true));
+        assert!(!ApiClient::is_retriable(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            false
+        ));
+        assert!(ApiClient::is_retriable(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            true
+        ));
+        assert!(ApiClient::is_retriable(
+            StatusCode::SERVICE_UNAVAILABLE,
+            true
+        ));
+        assert!(!ApiClient::is_retriable(StatusCode::BAD_REQUEST, true));
     }
 
     #[test]
