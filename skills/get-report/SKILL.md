@@ -59,3 +59,4 @@ xingu reports subscription 2025 04
 - Earnings: yearly (omit month) or monthly.
 - Subscription/subscriptions-overview: monthly.
 - The download URL needs no further auth to fetch.
+- For crash/ANR/LMK health metrics (same credentials), use the `check-vitals` skill.

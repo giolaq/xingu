@@ -34,6 +34,15 @@ pub async fn get_reporting_token() -> Result<String> {
     }
 
     // Priority 3: Fetch fresh reporting token
+    fetch_fresh_reporting_token().await
+}
+
+/// Force a fresh Reporting API token fetch, bypassing cache.
+pub async fn force_refresh_reporting() -> Result<String> {
+    fetch_fresh_reporting_token().await
+}
+
+async fn fetch_fresh_reporting_token() -> Result<String> {
     let creds = store::load_credentials()?;
     match creds {
         Some(creds) => {

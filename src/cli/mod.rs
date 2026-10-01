@@ -15,6 +15,7 @@ pub mod skills;
 pub mod targeting;
 pub mod update;
 pub mod videos;
+pub mod vitals;
 
 use clap::Subcommand;
 
@@ -75,6 +76,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: reports::ReportsCommands,
     },
+    /// Query app health metrics: crash, ANR, and LMK rates (Vitals API, beta)
+    Vitals {
+        #[command(subcommand)]
+        command: vitals::VitalsCommands,
+    },
     /// Helper workflows (compound commands)
     #[command(name = "+publish")]
     Publish(helpers::PublishArgs),
@@ -84,6 +90,9 @@ pub enum Commands {
     /// Update listing fields directly
     #[command(name = "+update-listing")]
     UpdateListing(helpers::UpdateListingArgs),
+    /// App health snapshot: crash/ANR/LMK series + top issues
+    #[command(name = "+health")]
+    Health(vitals::HealthArgs),
     /// Show xingu environment info (config dir, caches, overrides)
     Info,
     /// Self-update the xingu binary from GitHub Releases

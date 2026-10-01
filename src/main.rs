@@ -80,11 +80,13 @@ async fn run(cli: Cli) -> Result<()> {
             cli::targeting::run(command, format, dry_run, timeout).await
         }
         Commands::Reports { command } => cli::reports::run(command, format, dry_run, timeout).await,
+        Commands::Vitals { command } => cli::vitals::run(command, format, dry_run, timeout).await,
         Commands::Publish(args) => cli::helpers::publish(args, format, dry_run, timeout).await,
         Commands::Status(args) => cli::helpers::status(args, format, dry_run, timeout).await,
         Commands::UpdateListing(args) => {
             cli::helpers::update_listing(args, format, dry_run, timeout).await
         }
+        Commands::Health(args) => cli::vitals::health(args, format, dry_run, timeout).await,
         Commands::Info => cli::info::run(format).await,
         Commands::Update => cli::update::run(),
         Commands::Init => cli::init::run(format),

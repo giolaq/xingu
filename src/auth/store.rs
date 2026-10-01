@@ -7,6 +7,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const TOKEN_TTL_SECS: u64 = 3500; // slightly less than 1hr
 const KEYRING_SERVICE: &str = "xingu";
 const KEYRING_USER: &str = "credentials";
+/// Platforms with a persistent keyring backend enabled in Cargo.toml.
+/// Elsewhere keyring falls back to an in-memory mock, so use the file instead.
+const KEYRING_SUPPORTED: bool = cfg!(any(target_os = "macos", target_os = "windows"));
 
 #[derive(Serialize, Deserialize)]
 pub struct Credentials {
@@ -67,14 +70,18 @@ fn now_secs() -> u64 {
 pub fn save_credentials(creds: &Credentials) -> Result<()> {
     // Try keyring first
     let json = serde_json::to_string(creds)?;
-    if save_to_keyring(&json).is_ok() {
+    if KEYRING_SUPPORTED && save_to_keyring(&json).is_ok() {
+        // Remove any older file so it can't be mistaken for the active credentials.
+        let _ = fs::remove_file(credentials_path()?);
         eprintln!("Credentials saved to OS keyring.");
         return Ok(());
     }
 
     // Fall back to file
-    eprintln!("OS keyring unavailable. Saving credentials to file.");
-    save_credentials_file(creds)
+    let path = credentials_path()?;
+    save_credentials_file(creds)?;
+    eprintln!("Credentials saved to {}.", path.display());
+    Ok(())
 }
 
 fn save_to_keyring(json: &str) -> Result<()> {
@@ -130,6 +137,9 @@ pub fn load_credentials() -> Result<Option<Credentials>> {
 }
 
 fn load_from_keyring() -> Result<Option<Credentials>> {
+    if !KEYRING_SUPPORTED {
+        return Ok(None);
+    }
     let entry = match keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER) {
         Ok(e) => e,
         Err(_) => return Ok(None),
